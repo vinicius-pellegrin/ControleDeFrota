@@ -1,0 +1,202 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<title>controle de Frota</title>
+	<style type="text/css">
+.ui-layout-north {
+	z-index: 20 !important;
+	overflow: visible !important;
+}
+
+.ui-layout-north .ui-layout-unit-content {
+	overflow: visible !important;
+}
+</style>
+</h:head>
+<h:body onload="#{usuarioCon.initLista()}">
+
+	<p:growl id="mensagens"></p:growl>
+
+
+	<h:form id="formListar">
+
+					
+			
+		<p:panel id="painelListar" visible="#{!usuarioCon.editando}">
+
+
+			<p:dataTable id="listaDT" var="obj" value="#{usuarioCon.lista}"
+				selectionMode="single" selection="#{usuarioCon.selecionado}"
+				rowKey="#{obj.id}" rows="5" paginator="true"
+				paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				rowsPerPageTemplate="5,10,15"
+				currentPageReportTemplate="Listando de {startRecord} até {endRecord} de {totalRecords}"
+				emptyMessage="Nenhum registro encontrado">
+				<f:facet name="header">
+            Listagem de Usuarios
+            <p:commandButton value="Incluir" icon="ui-icon-plusthick"
+						actionListener="#{usuarioCon.incluir()}"
+						update="formEditar formListar"></p:commandButton>
+
+					<p:commandButton value="Editar" icon="ui-icon-pencil"
+						actionListener="#{usuarioCon.editar()}"
+						update="formEditar formListar"
+						disabled="#{usuarioCon.selecionado==null}"></p:commandButton>
+
+					<p:commandButton value="Excluir" icon="ui-icon-trash"
+						actionListener="#{usuarioCon.excluir()}" update="formListar"
+						disabled="#{usuarioCon.selecionado==null}"
+						onclick="return confirm('Excluir?')"></p:commandButton>
+
+				</f:facet>
+
+				<p:ajax event="rowSelect" update="formListar" />
+				<p:ajax event="rowUnselect" />
+
+				<p:column headerText="Id" sortBy="#{obj.id}" filterBy="#{obj.id}"
+					filterMatchMode="exact">
+					<h:outputText value="#{obj.id}" />
+				</p:column>
+				<p:column headerText="Nome" sortBy="#{obj.nome}"
+					filterBy="#{obj.nome}" filterMatchMode="contains">
+					<h:outputText value="#{obj.nome}" />
+				</p:column>
+
+				<p:column headerText="Data de Nascimento" sortBy="#{obj.dtNasc}"
+					filterBy="#{obj.dtNasc}" filterMatchMode="contains">
+					<h:outputText value="#{obj.dtNasc}">
+					<f:convertDateTime type="date" pattern="dd/MM/yyyy"/>
+					</h:outputText>
+					
+				</p:column>
+
+				<p:column headerText="CPF" sortBy="#{obj.cpf}" filterBy="#{obj.cpf}"
+					filterMatchMode="contains">
+					<h:outputText value="#{obj.cpf}" />
+				</p:column>
+
+				<p:column headerText="CNH" sortBy="#{obj.cnh}" filterBy="#{obj.cnh}"
+					filterMatchMode="contains">
+					<h:outputText value="#{obj.cnh}" />
+				</p:column>
+
+				<p:column headerText="Categoria CNH" sortBy="#{obj.cnhCat}"
+					filterBy="#{obj.cnhCat}" filterMatchMode="startsWith">
+					<h:outputText value="#{obj.cnhCat}" />
+				</p:column>
+
+				<p:column headerText="Tipo" sortBy="#{obj.tipo}"
+					filterBy="#{obj.tipo}" filterMatchMode="startsWith">
+					<h:outputText 
+						value="#{obj.tipo == 'C'?'comum':'Administrador'|| obj.tipo == 'c'?'Comum':'Administrador'}" />
+				</p:column>
+
+
+
+
+				<p:column headerText="Status" sortBy="#{obj.status}"
+					filterBy="#{obj.status}" filterMatchMode="startsWith">
+					<h:outputText value=" #{obj.status?'Livre':'Ocupado'}" />
+				</p:column>
+
+				<p:column>
+
+					<p:commandButton title="Editar" icon="ui-icon-pencil"
+						actionListener="#{usuarioCon.editar(obj.id)}"
+						update="formEditar formListar"></p:commandButton>
+
+					<p:commandButton title="Excluir" icon="ui-icon-trash"
+						actionListener="#{usuarioCon.excluir(obj.id)}" update="formListar"
+						onclick="return confirm('Excluir?')"></p:commandButton>
+
+				</p:column>
+
+			</p:dataTable>
+
+			<p:commandButton value="Sair" action="#{loginControle.sair()}" />
+
+
+		</p:panel>
+	</h:form>
+
+
+
+
+
+
+
+	<h:form id="formEditar">
+		<p:focus for="nome"></p:focus>
+		<p:panel id="painelEditar" visible="#{usuarioCon.editando}">
+		
+			<p:panelGrid columns="2">
+			
+				<p:outputLabel>Id</p:outputLabel>
+				<p:inputText value="#{usuarioCon.selecionado.id}" readonly="true"
+					size="6" placeholder="Automático"></p:inputText>
+
+				<p:outputLabel>Nome</p:outputLabel>
+				<p:inputText id="nome" value="#{usuarioCon.selecionado.nome}"></p:inputText>
+
+
+				<p:outputLabel  for="dtNasc" value="Data de Nascimento" />
+				<p:calendar id="dtNasc"  value="#{usuarioCon.selecionado.dtNasc}" locale="de" navigator="true" pattern="dd/MM/yyyy"  mask="true"/>
+
+
+
+				<p:outputLabel>CPF</p:outputLabel>
+				<p:inputMask id="cpf"  value="#{usuarioCon.selecionado.cpf}" mask="999.999.999-99"></p:inputMask>
+
+
+				<p:outputLabel>CNH</p:outputLabel>
+				<p:inputText id="cnh" value="#{usuarioCon.selecionado.cnh}">
+				 <p:ajax  event="keyup" listener="#{usuarioCon.trataCategoria}" update="categoria"></p:ajax>
+				</p:inputText>
+				
+				<p:outputLabel>CATEGORIA</p:outputLabel>				  
+					<p:inputText  id="categoria"  disabled="#{usuarioCon.liberaCat}"
+					value="#{usuarioCon.selecionado.cnhCat}" ></p:inputText>
+				
+
+				<h:outputText value="status: " />
+				<p:selectBooleanButton id="status"
+					value="#{usuarioCon.selecionado.status}" onLabel="Livre"
+					offLabel="Ocupado" onIcon="ui-icon-check" offIcon="ui-icon-close"
+					style="width:150px">
+					<p:ajax update="mensagens"
+						listener="#{usuarioCon.selecionado.mensagens}" />
+				</p:selectBooleanButton>
+
+				<p:outputLabel for="usuario" value="Usuario:" />
+				<p:selectOneMenu id="usuario" value="#{usuarioCon.selecionado.tipo}"
+					style="width:125px">
+					<f:selectItem itemLabel="administrador" itemValue="a" />
+					<f:selectItem itemLabel="comum" itemValue="c" />
+				</p:selectOneMenu>
+
+				<p:commandButton value="Gravar" icon="ui-icon-check"
+					actionListener="#{usuarioCon.gravar()}"
+					update="formEditar formListar mensagens"></p:commandButton>
+				<p:commandButton value="Cancelar" immediate="true"
+					icon="ui-icon-close" actionListener="#{usuarioCon.cancelar()}"
+					update="formEditar formListar mensagens"></p:commandButton>
+			</p:panelGrid>
+		</p:panel>
+	</h:form>
+
+<!-- 					<h:outputLabel for="senha" value="Senha: *" />
+					<p:password id="senha" value="#{usuarioCon.selecionado.senha}"
+						match="senha2" label="senha" required="true" />
+
+					<h:outputLabel for="senha2" value="Repita a Senha: *" />
+					<p:password id="senha2" value="#{usuarioCon.selecionado.senha}"
+						label="senha" required="true" />-->
+
+
+</h:body>
+</html>
